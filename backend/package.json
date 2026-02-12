@@ -3,10 +3,25 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev": "bun --watch index.ts"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/express": "^5.0.6",
+    "drizzle-kit": "^0.31.9"
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@clerk/express": "^1.7.69",
+    "@neondatabase/serverless": "^1.0.2",
+    "@trpc/server": "^11.10.0",
+    "dotenv": "^17.2.4",
+    "drizzle-orm": "^0.45.1",
+    "express": "^5.2.1",
+    "nanoid": "^5.1.6",
+    "zod": "^4.3.6"
   }
 }
