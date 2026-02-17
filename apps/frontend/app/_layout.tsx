@@ -19,6 +19,7 @@ import { Uniwind } from "uniwind";
 import { ClerkProvider } from "@clerk/clerk-expo";
 import "react-native-reanimated";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
+import { App } from "@/providers/TRPCProvider";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -72,7 +73,9 @@ function RootLayoutNav() {
             value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
           >
             <ClerkProvider tokenCache={tokenCache}>
-              <Slot />
+              <App>
+                <Slot />
+              </App>
             </ClerkProvider>
           </ThemeProvider>
         </GluestackUIProvider>

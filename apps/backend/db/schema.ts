@@ -1,3 +1,4 @@
+import type { InferSelectModel } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -158,3 +159,6 @@ export const messageReceipts = pgTable(
     byUser: index("message_reciepts_user_id_idx").on(t.userId),
   }),
 );
+
+export type userModel = InferSelectModel<typeof user>;
+export type conversationModel = InferSelectModel<typeof conversations>;

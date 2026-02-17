@@ -5,6 +5,8 @@ import db from "./db";
 import * as schema from "./db/schema";
 import { nanoid } from "nanoid";
 import { eq } from "drizzle-orm";
+import * as trpcExpress from "@trpc/server/adapters/express";
+import { appRouter, createContext } from "./trpc";
 
 const app = express();
 
@@ -91,12 +93,20 @@ app.post("/clerk/webhook", async (req, res) => {
       default:
         console.log("Unhandled event type:", event.type);
     }
-    res.status(200).send({ received: true });
+    res.status(200).send("Webhook recieved");
   } catch (error) {
     console.log(`❌ Clerk Wehbook Error: ${error}`);
-    res.status(500).send({ messager: "Server Error" });
+    res.status(500).send("Server Error");
   }
 });
+
+app.use(
+  "/trpc",
+  trpcExpress.createExpressMiddleware({
+    router: appRouter,
+    createContext,
+  }),
+);
 
 app.listen(5000, () => {
   console.log("✅ Server is up and running");

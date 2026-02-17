@@ -55,12 +55,15 @@ export default function SignInForm() {
 
       if (results.status === "complete") {
         await setActive({ session: results.createdSessionId });
-        router.push("/(protected)/(home)");
+        router.push("/(protected)/(home)/(tabs)/chats");
       }
     } catch (err: any) {
+      console.log(err);
       setClerkError(err.errors?.[0]?.message ?? "Sign In Failed");
     } finally {
       setIsLoading(false);
+      form.resetField("password");
+      form.resetField("usernameOrEmail");
     }
   }
   return (

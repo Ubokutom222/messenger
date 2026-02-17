@@ -22,7 +22,8 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.ubokutom222.frontend"
     },
     "web": {
       "bundler": "metro",
@@ -32,6 +33,12 @@
     "plugins": ["expo-router"],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "00d420ec-b320-4f42-b38e-8fdea01e9206"
+      }
     }
   }
 }

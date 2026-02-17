@@ -68,7 +68,7 @@ export default function SignUpForm() {
     if (!isLoaded) return;
 
     try {
-      await signUp.create({
+      const results = await signUp.create({
         emailAddress: data.email,
         password: data.password,
         firstName: data.firstname,
@@ -81,6 +81,7 @@ export default function SignUpForm() {
       });
       setStep("OTP");
     } catch (err: any) {
+      console.log(err);
       setClerkError(err.errors?.[0]?.message ?? "Sign up failed");
     } finally {
       setLoading(false);
@@ -100,12 +101,19 @@ export default function SignUpForm() {
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        router.push("/(protected)/(home)");
+        router.push("/(protected)/(home)/(tabs)/chats");
       }
     } catch (err: any) {
       setClerkError(err.errors?.[0]?.message ?? "Invalid Code");
     } finally {
       setLoading(false);
+      setStep("SIGNUP");
+      form.resetField("password");
+      form.resetField("email");
+      form.resetField("firstname");
+      form.resetField("lastname");
+      form.resetField("username");
+      otpForm.resetField("code");
     }
   }
   return (

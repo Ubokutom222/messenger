@@ -1,6 +1,9 @@
 {
   "name": "messenger",
-  "module": "index.ts",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "type": "module",
   "private": true,
   "devDependencies": {
