@@ -1,7 +1,7 @@
 import { useContext, createContext, useState } from "react";
-import type { userModel, conversationModel } from "../../backend/db/schema";
+import type { User, Conversation } from "@messenger/types";
 
-type ActiveChat = userModel | conversationModel | null;
+type ActiveChat = User | Conversation | null;
 interface ActiveChatContextProps {
   activeChat: ActiveChat;
   setActiveChat: (param: ActiveChat) => void;

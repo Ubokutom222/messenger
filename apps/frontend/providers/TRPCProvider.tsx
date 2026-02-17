@@ -4,6 +4,7 @@ import { useState } from "react";
 import { TRPCProvider } from "../trpc";
 import type { AppRouter } from "@messenger/types";
 import { useAuth } from "@clerk/clerk-expo";
+import superjson from "superjson";
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -40,6 +41,7 @@ export function App(props: AppProps) {
       links: [
         httpBatchLink({
           url: "https://oriented-hugely-glider.ngrok-free.app/trpc",
+          transformer: superjson,
           async headers() {
             const token = await getToken();
             return {

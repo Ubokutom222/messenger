@@ -20,6 +20,7 @@ import { ClerkProvider } from "@clerk/clerk-expo";
 import "react-native-reanimated";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { App } from "@/providers/TRPCProvider";
+import { ActiveChatProvider } from "@/providers/ActiveChatProvider";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -74,7 +75,9 @@ function RootLayoutNav() {
           >
             <ClerkProvider tokenCache={tokenCache}>
               <App>
-                <Slot />
+                <ActiveChatProvider>
+                  <Slot />
+                </ActiveChatProvider>
               </App>
             </ClerkProvider>
           </ThemeProvider>
