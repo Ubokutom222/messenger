@@ -10,7 +10,10 @@ import {
   ne,
   not,
   notInArray,
+  inArray,
   type InferInsertModel,
+  desc,
+  lt,
 } from "drizzle-orm";
 import superjson from "superjson";
 import { nanoid } from "nanoid";
@@ -142,7 +145,7 @@ export const appRouter = t.router({
         conversationMembers: z.array(
           z.object({
             id: z.string().nonoptional(),
-            name: z.string().nonoptional(),
+            name: z.string().nonempty().nonoptional(),
             createdAt: z.date().nonoptional(),
             updatedAt: z.date().nonoptional(),
             email: z.string().nullish(),
@@ -158,6 +161,10 @@ export const appRouter = t.router({
     .mutation(async ({ ctx, input }) => {
       try {
         console.log(input);
+        const [me] = await db
+          .select()
+          .from(schema.user)
+          .where(eq(schema.user.id, ctx.userId ?? ""));
         // Create a group conversation
         const [newConversation] = await db
           .insert(schema.conversations)
@@ -172,14 +179,21 @@ export const appRouter = t.router({
 
         const conversationMembers: Array<
           InferInsertModel<typeof schema.conversationMembers>
-        > = [];
+        > = [
+          {
+            userId: me!.id,
+            conversationId: newConversation!.id,
+            joinedAt: new Date(),
+            role: "admin",
+          },
+        ];
 
         input.conversationMembers.forEach((item) => {
           conversationMembers.push({
             conversationId: newConversation!.id,
             userId: item.id,
             joinedAt: new Date(),
-            role: item.id == ctx.userId ? "admin" : "member",
+            role: "member",
           });
         });
 
@@ -190,8 +204,214 @@ export const appRouter = t.router({
           .returning();
 
         console.log(newMembers);
+        return {
+          conversation: newConversation,
+          conversationMembers: newMembers,
+        };
       } catch (error) {
         console.log("❌ Create Group Error", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Server Error",
+        });
+      }
+    }),
+  getConversations: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const userId = ctx.userId ?? "";
+
+      // 1) Get all conversations where the current user is a member
+      const userConversations = await db
+        .select({
+          id: schema.conversations.id,
+          isGroup: schema.conversations.isGroup,
+          name: schema.conversations.name,
+          createdAt: schema.conversations.createdAt,
+          updatedAt: schema.conversations.updatedAt,
+        })
+        .from(schema.conversations)
+        .innerJoin(
+          schema.conversationMembers,
+          eq(
+            schema.conversations.id,
+            schema.conversationMembers.conversationId,
+          ),
+        )
+        .where(eq(schema.conversationMembers.userId, userId));
+
+      const conversationIds = userConversations.map((c) => c.id);
+
+      // 2) Fetch all members for the conversations found (including user details)
+      const members =
+        conversationIds.length > 0
+          ? await db
+              .select({
+                conversationId: schema.conversationMembers.conversationId,
+                userId: schema.conversationMembers.userId,
+                role: schema.conversationMembers.role,
+                joinedAt: schema.conversationMembers.joinedAt,
+                user: schema.user,
+              })
+              .from(schema.conversationMembers)
+              .leftJoin(
+                schema.user,
+                eq(schema.conversationMembers.userId, schema.user.id),
+              )
+              .where(
+                inArray(
+                  schema.conversationMembers.conversationId,
+                  conversationIds,
+                ),
+              )
+          : [];
+
+      // 3) Group members by conversationId
+      const membersByConversation: Record<string, Array<any>> = {};
+      members.forEach((m) => {
+        const convId = m.conversationId as string;
+        if (!membersByConversation[convId]) membersByConversation[convId] = [];
+        membersByConversation[convId].push(m);
+      });
+
+      // 4) Attach members to each conversation and return
+      const results = userConversations.map((conv) => ({
+        conversation: conv,
+        conversationMembers: membersByConversation[conv.id] ?? [],
+      }));
+
+      return results;
+    } catch (err) {
+      console.log("❌ Get Conversations Error", err);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Server Error",
+      });
+    }
+  }),
+  sendTextMessage: protectedProcedure
+    .input(
+      z.object({
+        conversationId: z.string().nullish(),
+        recipientId: z.string().nullish(),
+        content: z.string().nonempty().nonoptional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { conversationId, recipientId, content } = input;
+      try {
+        if (!conversationId && !recipientId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Missing Details",
+          });
+        }
+        if (conversationId) {
+          const newMessage = await db
+            .insert(schema.messages)
+            .values({
+              id: nanoid(),
+              conversationId,
+              senderId: ctx.userId ?? "",
+              content,
+              createdAt: new Date(),
+              isDeleted: false,
+              messageType: "text",
+              updatedAt: new Date(),
+            })
+            .returning();
+
+          console.log("New Message Created", newMessage);
+        }
+
+        if (recipientId) {
+          // Create a conversation
+          const [newConversation] = await db
+            .insert(schema.conversations)
+            .values({
+              id: nanoid(),
+              createdAt: new Date(),
+              isGroup: false,
+              updatedAt: new Date(),
+            })
+            .returning();
+
+          // Add Conversation members
+          await db.insert(schema.conversationMembers).values([
+            {
+              userId: ctx.userId ?? "",
+              conversationId: newConversation!.id ?? "",
+              joinedAt: new Date(),
+            },
+            {
+              userId: recipientId,
+              conversationId: newConversation!.id ?? "",
+              joinedAt: new Date(),
+            },
+          ]);
+
+          // Send message
+          const newMessage = await db
+            .insert(schema.messages)
+            .values({
+              id: nanoid(),
+              conversationId: newConversation?.id ?? "",
+              senderId: ctx.userId ?? "",
+              content,
+              createdAt: new Date(),
+              isDeleted: false,
+              messageType: "text",
+              updatedAt: new Date(),
+            })
+            .returning();
+
+          console.log("New Message Created", newMessage);
+        }
+      } catch (err) {
+        console.log("❌ Send Message Error", err);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Server Error",
+        });
+      }
+    }),
+  getMessages: protectedProcedure
+    .input(
+      z.object({
+        conversationId: z.string().nonoptional(),
+        limit: z.number().min(1).max(50).default(50),
+        cursor: z.iso.datetime().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { conversationId, limit, cursor } = input;
+      try {
+        const rows = await db
+          .select()
+          .from(schema.messages)
+          .where(
+            cursor
+              ? and(
+                  eq(schema.messages.conversationId, conversationId),
+                  lt(schema.messages.createdAt, new Date(cursor)),
+                )
+              : eq(schema.messages.conversationId, conversationId),
+          )
+          .orderBy(desc(schema.messages.createdAt))
+          .limit(limit + 1);
+
+        let nextCursor: string | undefined = undefined;
+
+        if (rows.length > limit) {
+          const nextItem = rows.pop();
+          nextCursor = nextItem?.createdAt.toISOString();
+        }
+
+        return {
+          messages: rows,
+          nextCursor,
+        };
+      } catch (error) {
+        console.log("❌ Get Messages Error", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Server Error",

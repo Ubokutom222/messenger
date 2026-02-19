@@ -24,7 +24,7 @@ export default function Protect() {
   }
   console.log(isSignedIn);
   return (
-    <Stack initialRouteName="(home)">
+    <Stack>
       <Stack.Protected guard={isSignedIn}>
         <Stack.Screen name="(home)" options={{ headerShown: false }} />
       </Stack.Protected>

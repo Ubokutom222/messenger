@@ -33,7 +33,12 @@ import {
 import { CheckIcon } from "@/components/ui/icon";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { HStack } from "@/components/ui/hstack";
-import { useAuth } from "@clerk/clerk-expo";
+import {
+  Toast,
+  ToastTitle,
+  ToastDescription,
+  useToast,
+} from "@/components/ui/toast";
 
 export default function Chats() {
   const trpc = useTRPC();
@@ -76,15 +81,54 @@ export default function Chats() {
   const isSelected = (userId: string) =>
     selectedUser.some((u) => u.id === userId);
 
+  const toast = useToast();
+  const [toastId, setToastId] = React.useState(0);
+  function handleToast(
+    type: "error" | "success" | "warning" | "info" | "muted",
+    message: string,
+  ) {
+    if (!toast.isActive(toastId.toString())) {
+      showNewToast(type, message);
+    }
+  }
+  function showNewToast(
+    type: "error" | "success" | "warning" | "info" | "muted",
+    message: string,
+  ) {
+    const newId = Math.random();
+    setToastId(newId);
+    toast.show({
+      id: newId.toString(),
+      placement: "top",
+      duration: 3000,
+      render: ({ id }) => {
+        const uniqueToastId = "toast-" + id;
+        return (
+          <Toast nativeID={uniqueToastId} action={type} variant="solid">
+            <ToastTitle>{type.toUpperCase()}</ToastTitle>
+            <ToastDescription>{message}</ToastDescription>
+          </Toast>
+        );
+      },
+    });
+  }
+
   async function handleCreate() {
-    // TODO: handle alerts for errors
-    if (selectedUser.length < 2) return;
+    // if (selectedUser.length < 2) {
+    //   handleToast()
+    //   return;
+    // }
+    if (groupName.length < 1) {
+      handleToast("error", "You have not entered a group name");
+      return;
+    }
     try {
-      // TODO: This only counts for the selected users but does not include the signed in user
-      await createGroupMutation.mutateAsync({
+      const newConversation = await createGroupMutation.mutateAsync({
         name: groupName,
         conversationMembers: selectedUser,
       });
+      setActiveChat(newConversation);
+      router.push("/(protected)/(home)/(tabs)/chats");
     } catch (err) {
       console.log("Error from the server", err);
       console.log("Client Error", error);

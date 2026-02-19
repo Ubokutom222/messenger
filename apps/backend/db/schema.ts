@@ -162,3 +162,8 @@ export const messageReceipts = pgTable(
 
 export type userModel = InferSelectModel<typeof user>;
 export type conversationModel = InferSelectModel<typeof conversations>;
+export type conversationMembersModel = InferSelectModel<
+  typeof conversationMembers
+> & {
+  user?: InferSelectModel<typeof user>;
+};
