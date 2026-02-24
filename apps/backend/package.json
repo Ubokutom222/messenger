@@ -20,9 +20,15 @@
     "@trpc/server": "^11.10.0",
     "dotenv": "^17.2.4",
     "drizzle-orm": "^0.45.1",
+    "eiows": "^8.2.0",
     "express": "^5.2.1",
     "nanoid": "^5.1.6",
+    "socket.io": "^4.8.3",
     "superjson": "^2.2.6",
     "zod": "^4.3.6"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.1.0",
+    "utf-8-validate": "^6.0.6"
   }
 }

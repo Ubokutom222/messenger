@@ -167,3 +167,4 @@ export type conversationMembersModel = InferSelectModel<
 > & {
   user?: InferSelectModel<typeof user>;
 };
+export type messageModel = InferSelectModel<typeof messages>;

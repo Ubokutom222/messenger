@@ -114,10 +114,10 @@ export default function Chats() {
   }
 
   async function handleCreate() {
-    // if (selectedUser.length < 2) {
-    //   handleToast()
-    //   return;
-    // }
+    if (selectedUser.length < 2) {
+      handleToast("info", "Select more that one user");
+      return;
+    }
     if (groupName.length < 1) {
       handleToast("error", "You have not entered a group name");
       return;

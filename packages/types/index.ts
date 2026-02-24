@@ -3,6 +3,7 @@ import type {
   userModel,
   conversationModel,
   conversationMembersModel,
+  messageModel,
 } from "../../apps/backend/db/schema";
 export type User = userModel;
 export type Users = userModel[];
@@ -11,3 +12,4 @@ export type Conversation = {
   conversationMembers?: Array<conversationMembersModel>;
 };
 export type Conversations = Conversation[];
+export type Message = messageModel;
