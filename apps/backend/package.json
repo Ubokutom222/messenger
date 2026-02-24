@@ -4,7 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --watch index.ts"
+    "dev": "bun --watch index.ts",
+    "build": "tsc",
+    "start": "bun dist/index.js"
   },
   "devDependencies": {
     "@types/bun": "latest",

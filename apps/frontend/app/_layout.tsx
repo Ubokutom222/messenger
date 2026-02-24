@@ -73,7 +73,7 @@ function RootLayoutNav() {
           <ThemeProvider
             value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
           >
-            <ClerkProvider tokenCache={tokenCache}>
+            <ClerkProvider tokenCache={tokenCache} publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}>
               <App>
                 <ActiveChatProvider>
                   <Slot />

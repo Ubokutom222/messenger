@@ -337,4 +337,6 @@ io.on("connection", (socket) => {
   });
 });
 
-httpServer.listen(5000);
+const PORT = process.env.PORT || 3000;
+
+httpServer.listen(PORT);
