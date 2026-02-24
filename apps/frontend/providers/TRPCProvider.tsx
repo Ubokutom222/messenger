@@ -40,7 +40,7 @@ export function App(props: AppProps) {
     createTRPCClient<AppRouter>({
       links: [
         httpBatchLink({
-          url: "https://oriented-hugely-glider.ngrok-free.app/trpc",
+          url: `${process.env.EXPO_PUBLIC_SERVER_URL || "https://oriented-hugely-glider.ngrok-free.app/"}/trpc`,
           transformer: superjson,
           async headers() {
             const token = await getToken();
